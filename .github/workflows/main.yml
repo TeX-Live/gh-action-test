@@ -34,38 +34,42 @@ on: [push]
 jobs:
   build_job:
     runs-on: ubuntu-latest
-    name: Build on ${{ matrix.arch }}
+    name: Build on ${{ matrix.tl_name }}
 
     strategy:
       fail-fast: false
       matrix:
         include:
-          - arch: i386-linux
+          - tl_name: i386-linux
             image: i386/ubuntu:xenial
-          - arch: x86_64-linux
+            arch: 386
+          - tl_name: x86_64-linux
             image: centos:7
-          - arch: x86_64-linuxmusl
+            arch: amd64
+          - tl_name: x86_64-linuxmusl
             image: alpine:3.5
-
-    container:
-      image: ${{ matrix.image }}
+            arch: amd64
 
     steps:
       - name: checkout-main
-        # we cannot use > v1 due to node being used then, and in 
-        # non standard setup node fails, see
-        # https://github.com/actions/checkout/issues/334#issuecomment-1241306390
-        uses: actions/checkout@v1
-      - name: install-deps
+        uses: actions/checkout@v4
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: ${{ matrix.arch }}
+      - name: build
+        uses: addnab/docker-run-action@v3
+        with: ${{ matrix.image }}
+        options: |
+          --platform linux/${{ matrix.arch }}
+          --volume ${{ github.workspace }}/../:/build
         run: |
           case "${{ matrix.image }}" in
             i386/ubuntu:*) .github/scripts/install-deps.ubuntu.sh ;;
             centos:*) .github/scripts/install-deps.centos.sh ;;
             alpine:*) .github/scripts/install-deps.alpine.sh ;;
           esac
-      - name: run build
-        shell: bash
-        run: .github/scripts/build-tl.sh ${{ matrix.arch }}
+          .github/scripts/build-tl.sh ${{ matrix.tl_name }}
       - name: find file step
         run: ls -l
       - name: save artifact
@@ -131,7 +135,9 @@ jobs:
             esac
           run: .github/scripts/build-tl.sh ${{ matrix.tl_name }} /artifacts
       - name: find file step
-        run: ls -l ${PWD}/artifacts
+        run: |
+          ls -d ${PWD}/artifacts
+          ls -l ${PWD}/artifacts
       - name: save artifact
         uses: actions/upload-artifact@v4
         with:
