@@ -60,16 +60,16 @@ jobs:
       - name: build
         uses: addnab/docker-run-action@v3
         with: ${{ matrix.image }}
-        options: |
-          --platform linux/${{ matrix.arch }}
-          --volume ${{ github.workspace }}/../:/build
-        run: |
-          case "${{ matrix.image }}" in
-            i386/ubuntu:*) .github/scripts/install-deps.ubuntu.sh ;;
-            centos:*) .github/scripts/install-deps.centos.sh ;;
-            alpine:*) .github/scripts/install-deps.alpine.sh ;;
-          esac
-          .github/scripts/build-tl.sh ${{ matrix.tl_name }}
+          options: |
+            --platform linux/${{ matrix.arch }}
+            --volume ${{ github.workspace }}/../:/build
+          run: |
+            case "${{ matrix.image }}" in
+              i386/ubuntu:*) .github/scripts/install-deps.ubuntu.sh ;;
+              centos:*) .github/scripts/install-deps.centos.sh ;;
+              alpine:*) .github/scripts/install-deps.alpine.sh ;;
+            esac
+            .github/scripts/build-tl.sh ${{ matrix.tl_name }}
       - name: find file step
         run: ls -l
       - name: save artifact
