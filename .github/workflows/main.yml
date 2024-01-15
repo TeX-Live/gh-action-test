@@ -1,0 +1,148 @@
+# .github/workflows/main.yml for texlive-source CI building
+#
+# Norbert Preining
+# Public Domain
+#
+# This file controls CI testing via Github Actions of the
+# git-svn checkout of the TeX Live source directory
+# which is pushed to Github
+#   https://github.com/TeX-Live/texlive-source
+# The cron job that does the git svn up and git push is
+# running on texlive.info; see norbert cron there. Run cmd as norbert:
+#   /home/norbert/git-svn-repos/git-svn-syncer --new texlive-source
+#
+# To make and retrieve new binaries:
+# * go to https://github.com/TeX-Live/texlive-source/commits/master
+#   and check that all commits you want are there (max waiting time 30min).
+# * go to https://github.com/TeX-Live/texlive-source/releases
+#   and "Draft new release" (does git tag).
+# * wait 30min or so.
+# * go to https://github.com/TeX-Live/texlive-source/releases/latest/
+#   and there should be binaries for the new "release".
+# * use tl-update-bindir.
+#
+# The actual code for building and running is in the Github Action
+#   TeX-Live/tl-build-docker-action
+#
+# TODO
+# * it would be nice if we could adjust the docker action usage
+#   to override the dockerfile but this seems not to be possible at the moment
+
+on: [push]
+
+
+jobs:
+  build_job:
+    runs-on: ubuntu-latest
+    name: Build on ${{ matrix.arch }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: i386-linux
+            image: i386/ubuntu:xenial
+          - arch: x86_64-linux
+            image: centos:7
+          - arch: x86_64-linuxmusl
+            image: alpine:3.5
+
+    container:
+      image: ${{ matrix.image }}
+
+    steps:
+      - name: checkout-main
+        # we cannot use > v1 due to node being used then, and in 
+        # non standard setup node fails, see
+        # https://github.com/actions/checkout/issues/334#issuecomment-1241306390
+        uses: actions/checkout@v1
+      - name: install-deps
+        run: |
+          case "${{ matrix.image }}" in
+            i386/ubuntu:*) .github/scripts/install-deps.ubuntu.sh ;;
+            centos:*) .github/scripts/install-deps.centos.sh ;;
+            alpine:*) .github/scripts/install-deps.alpine.sh ;;
+          esac
+      - name: run build
+        shell: bash
+        run: .github/scripts/build-tl.sh ${{ matrix.arch }}
+      - name: find file step
+        run: ls -l
+      - name: save artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: texlive-bin-${{ matrix.arch }}.tar.gz
+          path: texlive-bin-${{ matrix.arch }}.tar.gz
+          compression-level: 0
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: texlive-bin-${{ matrix.arch }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build_job_qemu:
+    runs-on: ubuntu-latest
+    name: Build on ${{ matrix.arch }}
+
+    strategy:
+      matrix:
+        include:
+          - arch: aarch64
+            distro: buster
+            tl_name: aarch64-linux
+          - arch: armv7
+            distro: buster
+            tl_name: armhf-linux
+    steps:
+      - name: checkout-main
+        uses: actions/checkout@v4
+      - uses: uraimo/run-on-arch-action@v2
+        name: Build artifact
+        id: build
+        with:
+          arch: ${{ matrix.arch }}
+          githubToken: ${{ github.token }}
+
+          setup: |
+            mkdir -p "${PWD}/artifacts"
+          dockerRunArgs: |
+            --volume "${PWD}/artifacts:/artifacts"
+          env: |
+            arch: ${{ matrix.arch }}
+            distro: ${{ matrix.distro }}
+          shell: /bin/bash
+          install: |
+            # this does not work because during install the
+            # checkout is not available!!!
+            # https://github.com/uraimo/run-on-arch-action/issues/54
+            # case "${{ matrix.distro }}" in
+            #   buster) .github/scripts/install-deps.ubuntu.sh ;;
+            # esac
+            case "${{ matrix.distro }}" in
+              buster)
+               export DEBIAN_FRONTEND=noninteractive
+               export LANG=C.UTF-8
+               export LC_ALL=C.UTF-8
+               apt-get update -q -y
+               apt-get install -y --no-install-recommends bash gcc g++ make perl libfontconfig-dev libx11-dev libxmu-dev libxaw7-dev build-essential
+               ;;
+            esac
+          run: .github/scripts/build-tl.sh ${{ matrix.tl_name }} /artifacts
+      - name: find file step
+        run: ls -l ${PWD}/artifacts
+      - name: save artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: texlive-bin-${{ matrix.tl_name }}.tar.gz
+          path: ${PWD}/artifacts/texlive-bin-${{ matrix.tl_name }}.tar.gz
+          compression-level: 0
+          retention-days: 5
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${PWD}/artifacts/texlive-bin-${{ matrix.tl_name }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
