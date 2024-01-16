@@ -66,6 +66,7 @@ jobs:
           options: |
             --platform linux/${{ matrix.arch }}
           run: |
+            ls -R /
             ls /github/workspace
             cd /github/workspace
             case "${{ matrix.image }}" in
