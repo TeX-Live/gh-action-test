@@ -14,8 +14,8 @@ then
 fi
 
 echo "file /bin/ls"
-file /bin/ls
-cp /bin/ls texlive-bin-$arch.tar.gz
+file -L /bin/ls
+cp -L /bin/ls texlive-bin-$arch.tar.gz
 
 if [ -n "$destdir" ] ; then
   mv texlive-bin-$arch.tar.gz "$destdir"
