@@ -76,7 +76,7 @@ jobs:
             esac
             .github/scripts/build-tl.sh ${{ matrix.tl_name }}
       - name: find file step
-        run: ls -l . repo $GITHUB_WORKSPACE
+        run: ls -l $GITHUB_WORKSPACE/repo/texlive-bin-${{ matrix.arch }}.tar.gz
       - name: save artifact
         uses: actions/upload-artifact@v4
         with:
