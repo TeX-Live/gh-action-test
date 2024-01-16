@@ -53,6 +53,8 @@ jobs:
     steps:
       - name: checkout-main
         uses: actions/checkout@v4
+        with:
+          path: 'repo'
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v2
         with:
@@ -65,8 +67,8 @@ jobs:
             --platform linux/${{ matrix.arch }}
             --volume ${{ github.workspace }}/../:/build
           run: |
-            ls /build
-            cd /build
+            ls /build/repo
+            cd /build/repo
             case "${{ matrix.image }}" in
               i386/ubuntu:*) .github/scripts/install-deps.ubuntu.sh ;;
               centos:*) .github/scripts/install-deps.centos.sh ;;
@@ -113,9 +115,9 @@ jobs:
           githubToken: ${{ github.token }}
 
           setup: |
-            mkdir -p "/artifacts"
+            mkdir -p "/tmp/artifacts"
           dockerRunArgs: |
-            --volume "/artifacts:/artifacts"
+            --volume "/tmp/artifacts:/artifacts"
           env: |
             arch: ${{ matrix.arch }}
             distro: ${{ matrix.distro }}
@@ -139,19 +141,19 @@ jobs:
           run: .github/scripts/build-tl.sh ${{ matrix.tl_name }} /artifacts
       - name: find file step
         run: |
-          ls -d /artifacts
-          ls -l /artifacts
+          ls -d /tmp/artifacts
+          ls -l /tmp/artifacts
       - name: save artifact
         uses: actions/upload-artifact@v4
         with:
           name: texlive-bin-${{ matrix.tl_name }}.tar.gz
-          path: /artifacts/texlive-bin-${{ matrix.tl_name }}.tar.gz
+          path: /tmp/artifacts/texlive-bin-${{ matrix.tl_name }}.tar.gz
           compression-level: 0
           retention-days: 5
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: /artifacts/texlive-bin-${{ matrix.tl_name }}.tar.gz
+          files: /tmp/artifacts/texlive-bin-${{ matrix.tl_name }}.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
