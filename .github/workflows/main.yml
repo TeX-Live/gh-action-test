@@ -68,6 +68,7 @@ jobs:
           path: 'repo'
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v2
+        if: startsWith(${{ matrix.image }}, "arm")
         with:
           platforms: ${{ matrix.qemu_arch }}
       - name: build
