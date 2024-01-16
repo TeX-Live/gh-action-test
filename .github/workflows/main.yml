@@ -65,9 +65,8 @@ jobs:
           image: ${{ matrix.image }}
           options: -v ${{ github.workspace }}:/work --platform linux/${{ matrix.arch }}
           run: |
-            ls /work
-            ls /github/workspace
-            cd /github/workspace
+            ls /work/repo
+            cd /work/repo
             case "${{ matrix.image }}" in
               i386/ubuntu:*) .github/scripts/install-deps.ubuntu.sh ;;
               centos:*) .github/scripts/install-deps.centos.sh ;;
