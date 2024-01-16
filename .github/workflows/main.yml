@@ -54,7 +54,7 @@ jobs:
             arch: aarch64
           - tl_name: armhf-linux
             image: arm32v7/debian:buster
-            arch: arm/v7
+            arch: arm32v7
 
     steps:
       - name: checkout-main
