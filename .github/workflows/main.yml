@@ -58,7 +58,7 @@ jobs:
             platform: aarch64
           - tl_name: armhf-linux
             image: arm32v7/debian:buster
-            qemu_arch: arm32v7
+            qemu_arch: arm
             platform: arm/v7
 
     steps:
