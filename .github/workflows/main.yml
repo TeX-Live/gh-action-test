@@ -42,19 +42,24 @@ jobs:
         include:
           - tl_name: i386-linux
             image: i386/ubuntu:xenial
-            arch: 386
+            qemu_arch: 386
+            platform: 386
           - tl_name: x86_64-linux
             image: centos:7
-            arch: amd64
+            qemu_arch: amd64
+            platform: amd64
           - tl_name: x86_64-linuxmusl
             image: alpine:3.5
-            arch: amd64
+            qemu_arch: amd64
+            platform: amd64
           - tl_name: aarch64-linux
             image: arm64v8/debian:buster
-            arch: aarch64
+            qemu_arch: aarch64
+            platform: aarch64
           - tl_name: armhf-linux
             image: arm32v7/debian:buster
-            arch: arm32v7
+            qemu_arch: arm32v7
+            platform: arm/v7
 
     steps:
       - name: checkout-main
@@ -64,12 +69,12 @@ jobs:
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v2
         with:
-          platforms: ${{ matrix.arch }}
+          platforms: ${{ matrix.qemu_arch }}
       - name: build
         uses: addnab/docker-run-action@v3
         with: 
           image: ${{ matrix.image }}
-          options: -v ${{ github.workspace }}:/work --platform linux/${{ matrix.arch }}
+          options: -v ${{ github.workspace }}:/work --platform linux/${{ matrix.platform }}
           run: |
             cd /work/repo
             case "${{ matrix.image }}" in
