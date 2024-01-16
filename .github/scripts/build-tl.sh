@@ -13,7 +13,10 @@ then
   . /opt/rh/devtoolset-9/enable
 fi
 
-touch texlive-bin-$arch.tar.gz
+echo "file /bin/ls"
+file /bin/ls
+cp /bin/ls texlive-bin-$arch.tar.gz
+
 if [ -n "$destdir" ] ; then
   mv texlive-bin-$arch.tar.gz "$destdir"
   ls "$destdir"
