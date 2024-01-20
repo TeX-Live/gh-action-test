@@ -135,7 +135,17 @@ jobs:
         with:
           path: 'repo'
       - name: build
-        uses: vmactions/${{ matrix.bsd }}-vm@v1
+        uses: vmactions/freebsd-vm@v1
+        if: ${{ matrix.bsd == "freebsd" }}
+        with: 
+          usesh: true
+          run: |
+            cd /work/repo
+            github/scripts/install-deps.bsd.sh
+            .github/scripts/build-tl.sh ${{ matrix.arch }}-${{ matrix.bsd }}
+      - name: build
+        uses: vmactions/netbsd-vm@v1
+        if: ${{ matrix.bsd == "netbsd" }}
         with: 
           usesh: true
           run: |
