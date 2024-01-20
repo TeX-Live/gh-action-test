@@ -140,9 +140,7 @@ jobs:
         with: 
           usesh: true
           run: |
-            ls
-            ls -R
-            cd /work/repo
+            cd repo
             github/scripts/install-deps.bsd.sh
             .github/scripts/build-tl.sh ${{ matrix.arch }}-${{ matrix.bsd }}
       - name: build netbsd
@@ -151,7 +149,7 @@ jobs:
         with: 
           usesh: true
           run: |
-            cd /work/repo
+            cd repo
             github/scripts/install-deps.bsd.sh
             .github/scripts/build-tl.sh ${{ matrix.arch }}-${{ matrix.bsd }}
       - name: find file step
