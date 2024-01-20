@@ -39,7 +39,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        release_build: [ ${{ startsWith(github.ref, 'refs/tags/') }} ]
+        release_build: 
+          - ${{ startsWith(github.ref, 'refs/tags/') }}
         include:
           - tl_name: i386-linux
             image: i386/ubuntu:xenial
