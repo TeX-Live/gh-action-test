@@ -141,8 +141,8 @@ jobs:
           usesh: true
           run: |
             cd repo
-            bash .github/scripts/install-deps.bsd.sh
-            bash .github/scripts/build-tl.sh ${{ matrix.arch }}-${{ matrix.bsd }}
+            sh .github/scripts/install-deps.bsd.sh
+            sh .github/scripts/build-tl.sh ${{ matrix.arch }}-${{ matrix.bsd }}
       - name: build netbsd
         uses: vmactions/netbsd-vm@v1
         if: matrix.bsd == 'netbsd'
@@ -150,8 +150,8 @@ jobs:
           usesh: true
           run: |
             cd repo
-            bash .github/scripts/install-deps.bsd.sh
-            bash .github/scripts/build-tl.sh ${{ matrix.arch }}-${{ matrix.bsd }}
+            sh .github/scripts/install-deps.bsd.sh
+            sh .github/scripts/build-tl.sh ${{ matrix.arch }}-${{ matrix.bsd }}
       - name: find file step
         if: ${{ matrix.ci_build || matrix.release_build }}
         run: ls -l $GITHUB_WORKSPACE/repo/texlive-bin-${{ matrix.arch }}-${{ matrix.bsd }}.tar.gz
