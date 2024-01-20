@@ -39,33 +39,33 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: []
+        release_build: ${{ startsWith(github.ref, 'refs/tags/') }}
         include:
           - tl_name: i386-linux
             image: i386/ubuntu:xenial
             qemu_arch: 386
             platform: 386
+            ci_build: true
           - tl_name: x86_64-linux
             image: centos:7
             qemu_arch: amd64
             platform: amd64
+            ci_build: true
           - tl_name: x86_64-linuxmusl
             image: alpine:3.5
             qemu_arch: amd64
             platform: amd64
+            ci_build: true
           - tl_name: aarch64-linux
             image: arm64v8/debian:buster
             qemu_arch: aarch64
             platform: aarch64
+            ci_build: false
           - tl_name: armhf-linux
             image: arm32v7/debian:buster
             qemu_arch: arm
             platform: arm/v7
-        exclude:
-          # exclude aarch and arm when NOT building a release
-          - platform: ${{ startsWith(github.ref, 'refs/tags/') && 'dummy' || 'aarch64' }}
-          - platform: ${{ startsWith(github.ref, 'refs/tags/') && 'dummy' || 'arm/v7' }}
-
+            ci_build: false
 
     steps:
       - name: checkout-main
@@ -79,6 +79,7 @@ jobs:
           platforms: ${{ matrix.qemu_arch }}
       - name: build
         uses: addnab/docker-run-action@v3
+        if: ${{ matrix.ci_build || matrix.release_build }}
         with: 
           image: ${{ matrix.image }}
           options: -v ${{ github.workspace }}:/work --platform linux/${{ matrix.platform }}
@@ -91,8 +92,10 @@ jobs:
             esac
             .github/scripts/build-tl.sh ${{ matrix.tl_name }}
       - name: find file step
+        if: ${{ matrix.ci_build || matrix.release_build }}
         run: ls -l $GITHUB_WORKSPACE/repo/texlive-bin-${{ matrix.tl_name }}.tar.gz
       - name: save artifact
+        if: ${{ matrix.ci_build || matrix.release_build }}
         uses: actions/upload-artifact@v4
         with:
           name: texlive-bin-${{ matrix.tl_name }}.tar.gz
@@ -101,6 +104,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
+        if: matrix.release_build
         with:
           files: $GITHUB_WORKSPACE/repo/texlive-bin-${{ matrix.tl_name }}.tar.gz
         env:
