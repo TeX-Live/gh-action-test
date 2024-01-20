@@ -115,3 +115,48 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+
+  bsd_build_job:
+    runs-on: ubuntu-latest
+    name: Build on ${{ matrix.arch }}-${{ matrix.bsd }}
+
+    strategy:
+      fail-fast: false
+      matrix: 
+        arch: [ i386, amd64 ]
+        bsd: [ freebsd, netbsd ]
+        ci_build: [ true ]
+        release_build: 
+          - ${{ startsWith(github.ref, 'refs/tags/') }}
+
+    steps:
+      - name: checkout-main
+        uses: actions/checkout@v4
+        with:
+          path: 'repo'
+      - name: build
+        uses: vmactions/${{ matrix.bsd }}-vm@v1
+        with: 
+          usesh: true
+          run: |
+            cd /work/repo
+            github/scripts/install-deps.bsd.sh
+            .github/scripts/build-tl.sh ${{ matrix.arch }}-${{ matrix.bsd }}
+      - name: find file step
+        if: ${{ matrix.ci_build || matrix.release_build }}
+        run: ls -l $GITHUB_WORKSPACE/repo/texlive-bin-${{ matrix.arch }}-${{ matrix.bsd }}.tar.gz
+      - name: save artifact
+        if: ${{ matrix.ci_build || matrix.release_build }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: texlive-bin-${{ matrix.arch }}-${{ matrix.bsd }}.tar.gz
+          path: ${{ github.workspace }}/repo/texlive-bin-${{ matrix.arch }}-${{ matrix.bsd }}.tar.gz
+          compression-level: 0
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: matrix.release_build
+        with:
+          files: $GITHUB_WORKSPACE/repo/texlive-bin-${{ matrix.arch }}-${{ matrix.bsd }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
