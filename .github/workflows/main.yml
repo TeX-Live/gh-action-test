@@ -39,6 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        platform: []
         include:
           - tl_name: i386-linux
             image: i386/ubuntu:xenial
