@@ -134,16 +134,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: 'repo'
-      - name: build
+      - name: build freebsd
         uses: vmactions/freebsd-vm@v1
         if: matrix.bsd == 'freebsd'
         with: 
           usesh: true
           run: |
+            ls
+            ls -R
             cd /work/repo
             github/scripts/install-deps.bsd.sh
             .github/scripts/build-tl.sh ${{ matrix.arch }}-${{ matrix.bsd }}
-      - name: build
+      - name: build netbsd
         uses: vmactions/netbsd-vm@v1
         if: matrix.bsd == 'netbsd'
         with: 
