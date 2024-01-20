@@ -136,7 +136,7 @@ jobs:
           path: 'repo'
       - name: build
         uses: vmactions/freebsd-vm@v1
-        if: matrix.bsd == "freebsd"
+        if: matrix.bsd == 'freebsd'
         with: 
           usesh: true
           run: |
@@ -145,7 +145,7 @@ jobs:
             .github/scripts/build-tl.sh ${{ matrix.arch }}-${{ matrix.bsd }}
       - name: build
         uses: vmactions/netbsd-vm@v1
-        if: matrix.bsd == "netbsd"
+        if: matrix.bsd == 'netbsd'
         with: 
           usesh: true
           run: |
