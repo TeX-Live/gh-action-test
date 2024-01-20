@@ -60,6 +60,11 @@ jobs:
             image: arm32v7/debian:buster
             qemu_arch: arm
             platform: arm/v7
+        exclude:
+          # exclude aarch and arm when NOT building a release
+          - platform: ${{ startsWith(github.ref, 'refs/tags/') && 'dummy' || 'aarch64' }}
+          - platform: ${{ startsWith(github.ref, 'refs/tags/') && 'dummy' || 'arm/v7' }}
+
 
     steps:
       - name: checkout-main
@@ -79,9 +84,9 @@ jobs:
           run: |
             cd /work/repo
             case "${{ matrix.image }}" in
-              i386/ubuntu:*) .github/scripts/install-deps.ubuntu.sh ;;
-              centos:*) .github/scripts/install-deps.centos.sh ;;
-              alpine:*) .github/scripts/install-deps.alpine.sh ;;
+              i386/ubuntu:*) echo .github/scripts/install-deps.ubuntu.sh ;;
+              centos:*) echo .github/scripts/install-deps.centos.sh ;;
+              alpine:*) echo .github/scripts/install-deps.alpine.sh ;;
             esac
             .github/scripts/build-tl.sh ${{ matrix.tl_name }}
       - name: find file step
